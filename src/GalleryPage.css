@@ -481,3 +481,143 @@
   font-size: 0.8rem;
   color: #0284c7;
 }
+
+/* ══════════════════════════════════════════════════════
+   📱 MOBILE RESPONSIVE STYLES (DO NOT TOUCH DESKTOP)
+   ══════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .gallery-page {
+    height: 100dvh;
+  }
+
+  .gallery-topbar-seamless {
+    padding: 12px 14px 6px;
+    align-items: flex-start;
+  }
+
+  .back-btn {
+    padding: 6px 14px;
+    font-size: 0.78rem;
+  }
+
+  .topbar-right-spacer {
+    width: 60px;
+  }
+
+  .romantic-handwritten-text {
+    font-size: clamp(1.1rem, 4.2vw, 1.45rem);
+    line-height: 1.2;
+  }
+
+  .ps-handwritten-tag {
+    font-size: 0.95rem;
+    margin-top: 1px;
+  }
+
+  .horizontal-scroll-container {
+    padding: 85px 16px 18px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .horizontal-grid {
+    gap: 14px;
+  }
+
+  /* Make portrait cards scale proportionally on mobile screens */
+  .portrait-card {
+    height: 100%;
+    max-height: calc(100dvh - 120px);
+    border-radius: 14px;
+  }
+
+  .play-triangle {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+
+  .video-quality-tag {
+    font-size: 0.58rem;
+    padding: 2px 6px;
+  }
+
+  .gift-card-spacer {
+    width: 50px;
+  }
+
+  .gift-card-wrapper {
+    height: 100%;
+    max-height: calc(100dvh - 120px);
+  }
+
+  .gift-card {
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  .gift-bow {
+    font-size: 2.6rem;
+  }
+
+  .gift-card-inner h3 {
+    font-size: 1.1rem;
+  }
+
+  .gift-card-inner p {
+    font-size: 0.78rem;
+  }
+
+  /* Love letter drawer on mobile */
+  .side-drawer {
+    width: 92vw;
+    padding: 20px 16px;
+  }
+
+  .drawer-header h2 {
+    font-size: 1.3rem;
+  }
+
+  .letter-paper {
+    padding: 16px;
+    font-size: 0.9rem;
+  }
+}
+
+/* Extra small phones (iPhone SE, Galaxy A, screen width <= 360px) */
+@media (max-width: 360px) {
+  .gallery-topbar-seamless {
+    padding: 8px 10px 4px;
+  }
+
+  .back-btn {
+    padding: 5px 10px;
+    font-size: 0.72rem;
+  }
+
+  .romantic-handwritten-text {
+    font-size: 0.98rem;
+  }
+
+  .ps-handwritten-tag {
+    font-size: 0.82rem;
+  }
+
+  .horizontal-scroll-container {
+    padding: 72px 10px 12px;
+  }
+
+  .horizontal-grid {
+    gap: 10px;
+  }
+
+  .portrait-card,
+  .gift-card-wrapper {
+    max-height: calc(100dvh - 100px);
+  }
+
+  .play-triangle {
+    width: 34px;
+    height: 34px;
+    font-size: 0.85rem;
+  }
+}

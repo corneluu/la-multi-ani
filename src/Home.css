@@ -182,3 +182,84 @@
   0%, 100% { transform: translateY(0) rotate(-2deg); }
   50%      { transform: translateY(-8px) rotate(3deg); }
 }
+
+/* ══════════════════════════════════════════════════════
+   📱 MOBILE RESPONSIVE STYLES (DO NOT TOUCH DESKTOP)
+   ══════════════════════════════════════════════════════ */
+@media (max-width: 600px) {
+  .home-page {
+    height: 100dvh;
+    padding: 16px 12px;
+    gap: 18px;
+    justify-content: space-evenly;
+  }
+
+  .hero-stage {
+    padding: 22px 18px;
+    gap: 12px;
+    border-radius: 22px;
+    width: 95vw;
+  }
+
+  .main-title {
+    font-size: clamp(1.6rem, 7vw, 2.2rem);
+    line-height: 1.2;
+  }
+
+  .sub-title {
+    font-size: clamp(0.85rem, 3.8vw, 0.98rem);
+    line-height: 1.5;
+  }
+
+  .hearts-row {
+    gap: 6px;
+    margin-top: 2px;
+  }
+
+  .small-red-heart {
+    font-size: 0.9rem;
+  }
+
+  .bouquet-button-container {
+    padding: 6px;
+  }
+
+  .bouquet-button-img {
+    height: 110px;
+  }
+
+  .bouquet-pulse-ring {
+    width: 100px;
+    height: 100px;
+  }
+}
+
+/* Extra small phones (iPhone SE, Galaxy A0x, screen width <= 360px) */
+@media (max-width: 360px) {
+  .home-page {
+    gap: 12px;
+    padding: 12px 8px;
+  }
+
+  .hero-stage {
+    padding: 16px 12px;
+    gap: 10px;
+  }
+
+  .main-title {
+    font-size: 1.45rem;
+  }
+
+  .sub-title {
+    font-size: 0.78rem;
+  }
+
+  .bouquet-button-img {
+    height: 95px;
+  }
+
+  .bouquet-pulse-ring {
+    width: 85px;
+    height: 85px;
+  }
+}

@@ -321,3 +321,117 @@
   font-size: 0.8rem;
   color: #ff6b6b;
 }
+
+/* ══════════════════════════════════════════════════════
+   📱 MOBILE RESPONSIVE STYLES (DO NOT TOUCH DESKTOP)
+   ══════════════════════════════════════════════════════ */
+@media (max-width: 600px) {
+  .login-page {
+    height: 100dvh;
+    padding: 16px 12px;
+    overflow-y: auto;
+  }
+
+  .secret-flower-trigger {
+    top: 14px;
+    right: 14px;
+    font-size: 1.5rem;
+  }
+
+  .login-card {
+    width: 100%;
+    max-width: 100%;
+    padding: 24px 18px;
+    gap: 18px;
+    border-radius: 24px;
+  }
+
+  .login-header h1 {
+    font-size: clamp(1.25rem, 5.5vw, 1.7rem);
+    margin-top: 4px;
+    margin-bottom: 4px;
+  }
+
+  .countdown-subtitle {
+    font-size: 0.8rem;
+    line-height: 1.4;
+  }
+
+  .countdown-display {
+    padding: 12px 14px;
+    gap: 8px;
+    border-radius: 16px;
+    width: 100%;
+    justify-content: space-around;
+  }
+
+  .time-unit {
+    min-width: 44px;
+  }
+
+  .time-unit .number {
+    font-size: clamp(1.4rem, 6vw, 2rem);
+  }
+
+  .time-unit .label {
+    font-size: 0.62rem;
+    letter-spacing: 0.05em;
+  }
+
+  .colon {
+    font-size: 1.3rem;
+    margin-top: -8px;
+  }
+
+  .password-input {
+    font-size: 0.88rem;
+    padding: 11px 16px;
+  }
+
+  .login-btn {
+    font-size: 0.88rem;
+    padding: 11px 20px;
+    width: 100%;
+  }
+
+  .secret-modal-card {
+    padding: 24px 18px;
+    width: 92vw;
+  }
+}
+
+/* Extra small phones (iPhone SE, Galaxy A0x, screen width <= 360px) */
+@media (max-width: 360px) {
+  .login-card {
+    padding: 18px 12px;
+    gap: 14px;
+  }
+
+  .countdown-display {
+    padding: 10px 8px;
+    gap: 4px;
+  }
+
+  .time-unit {
+    min-width: 36px;
+  }
+
+  .time-unit .number {
+    font-size: 1.25rem;
+  }
+
+  .time-unit .label {
+    font-size: 0.55rem;
+  }
+
+  .colon {
+    font-size: 1.1rem;
+    margin-top: -6px;
+  }
+
+  .password-input,
+  .login-btn {
+    font-size: 0.82rem;
+    padding: 10px 14px;
+  }
+}

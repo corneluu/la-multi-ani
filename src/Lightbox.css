@@ -94,3 +94,38 @@
   border-color: #e91e8c;
   transform: scale(1.08);
 }
+
+/* ══════════════════════════════════════════════════════
+   📱 MOBILE RESPONSIVE STYLES (DO NOT TOUCH DESKTOP)
+   ══════════════════════════════════════════════════════ */
+@media (max-width: 600px) {
+  .lb-back {
+    padding: 8px;
+  }
+
+  .lb-box {
+    max-width: 98vw;
+    max-height: 92vh;
+    border-radius: 14px;
+  }
+
+  .lb-media-container {
+    max-width: 98vw;
+    max-height: 92vh;
+  }
+
+  .lb-video-player,
+  .lb-image-full {
+    max-width: 98vw;
+    max-height: 88vh;
+    border-radius: 12px;
+  }
+
+  .lb-x {
+    top: 10px;
+    right: 10px;
+    width: 32px;
+    height: 32px;
+    font-size: 0.9rem;
+  }
+}
