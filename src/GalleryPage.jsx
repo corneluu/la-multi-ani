@@ -53,7 +53,7 @@ export default function GalleryPage() {
     <div className="gallery-page">
       {/* ── STATIC TOP HEADER (FIXED & SEAMLESS) ── */}
       <header className="gallery-topbar-seamless">
-        <button className="back-btn" onClick={() => navigate('/')}>
+        <button className="back-btn" onClick={() => navigate('/home')}>
           ← Înapoi
         </button>
 

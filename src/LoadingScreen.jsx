@@ -11,7 +11,7 @@ export default function LoadingScreen({ progress = 0, currentItem = '', isComple
         <div className="loading-bouquet-wrapper">
           <div className="loading-glow-ring" />
           <img
-            src="/cartoon_lilies.png"
+            src={`${import.meta.env.BASE_URL}cartoon_lilies.png`}
             alt="Loading Lilies"
             className="loading-bouquet-img"
           />

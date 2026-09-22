@@ -134,7 +134,7 @@ export default function Home() {
         title="Apasă pentru a deschide amintirile 🌸"
       >
         <div className="bouquet-pulse-ring" />
-        <img src="/cartoon_lilies.png" alt="Blue Lily Bouquet" className="bouquet-button-img" />
+        <img src={`${import.meta.env.BASE_URL}cartoon_lilies.png`} alt="Blue Lily Bouquet" className="bouquet-button-img" />
       </div>
     </div>
   )
