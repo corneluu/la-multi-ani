@@ -1,0 +1,182 @@
+/* ── FULLSCREEN LOADING SCREEN OVERLAY ── */
+.loading-screen-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(15, 23, 42, 0.94) 0%,
+    rgba(2, 6, 23, 0.98) 100%
+  );
+  backdrop-filter: blur(20px) saturate(1.3);
+  opacity: 1;
+  transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.6s;
+  user-select: none;
+}
+
+.loading-screen-overlay.fade-out {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.loading-bg-backdrop {
+  position: absolute;
+  inset: 0;
+  background: url('/romantic_bg.jpg') center center / cover no-repeat;
+  filter: blur(28px) brightness(0.3);
+  transform: scale(1.1);
+  z-index: 0;
+}
+
+/* ── CARD CONTENT ── */
+.loading-content-card {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 44px 36px;
+  max-width: 480px;
+  width: 90vw;
+  background: rgba(15, 23, 42, 0.72);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 30px;
+  box-shadow:
+    0 0 70px rgba(56, 189, 248, 0.22),
+    0 25px 60px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  animation: cardFloat 3.5s ease-in-out infinite alternate;
+}
+
+@keyframes cardFloat {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-8px); }
+}
+
+/* ── ANIMATED BOUQUET ── */
+.loading-bouquet-wrapper {
+  position: relative;
+  width: 140px;
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+}
+
+.loading-glow-ring {
+  position: absolute;
+  width: 130px;
+  height: 130px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.45) 0%, rgba(233, 30, 140, 0.3) 60%, transparent 80%);
+  animation: ringPulseLoading 2s infinite alternate ease-in-out;
+}
+
+@keyframes ringPulseLoading {
+  0% { transform: scale(0.9); opacity: 0.6; }
+  100% { transform: scale(1.35); opacity: 1; }
+}
+
+.loading-bouquet-img {
+  position: relative;
+  z-index: 2;
+  height: 110px;
+  width: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 16px rgba(0, 162, 255, 0.6)) drop-shadow(0 0 20px rgba(255, 107, 181, 0.8));
+  animation: bouquetTilt 2.8s ease-in-out infinite alternate;
+}
+
+@keyframes bouquetTilt {
+  0% { transform: rotate(-5deg) scale(0.98); }
+  100% { transform: rotate(5deg) scale(1.04); }
+}
+
+/* Floating sparkles around bouquet */
+.loading-sparkle {
+  position: absolute;
+  font-size: 1.3rem;
+  z-index: 3;
+  animation: sparkleTwinkle 2s infinite ease-in-out alternate;
+}
+.loading-sparkle.s1 { top: 5px; right: 10px; animation-delay: 0.2s; }
+.loading-sparkle.s2 { bottom: 15px; left: 10px; animation-delay: 0.7s; }
+.loading-sparkle.s3 { top: 25px; left: 5px; animation-delay: 1.2s; }
+
+@keyframes sparkleTwinkle {
+  0% { transform: scale(0.7) translateY(0); opacity: 0.4; }
+  100% { transform: scale(1.3) translateY(-6px); opacity: 1; }
+}
+
+/* ── TEXT ── */
+.loading-title {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.4rem, 3.5vw, 1.8rem);
+  font-weight: 700;
+  color: #f8fafc;
+  margin-bottom: 8px;
+  text-shadow: 0 2px 10px rgba(56, 189, 248, 0.5);
+}
+
+.loading-subtitle {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.92rem;
+  color: rgba(224, 242, 254, 0.85);
+  margin-bottom: 24px;
+  min-height: 22px;
+  transition: all 0.3s ease;
+}
+
+/* ── PROGRESS BAR ── */
+.loading-bar-track {
+  width: 100%;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 20px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.loading-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #38bdf8 0%, #0284c7 45%, #e91e8c 80%, #ff6bb5 100%);
+  background-size: 200% 100%;
+  border-radius: 20px;
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.9), 0 0 8px rgba(233, 30, 140, 0.6);
+  transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: shimmerProgress 2s linear infinite;
+}
+
+@keyframes shimmerProgress {
+  0% { background-position: 100% 0; }
+  100% { background-position: 0 0; }
+}
+
+/* ── PROGRESS STATS ── */
+.loading-stats {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-top: 12px;
+  font-size: 0.85rem;
+}
+
+.loading-pct {
+  font-weight: 700;
+  color: #38bdf8;
+  font-family: 'Inter', monospace;
+}
+
+.loading-note {
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 0.8rem;
+}
