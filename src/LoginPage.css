@@ -428,3 +428,17 @@
     padding: 10px 14px;
   }
 }
+
+/* ── Gallery Preview Hint ── */
+.gallery-preview-hint {
+  margin-top: 10px;
+  text-align: center;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.55);
+  letter-spacing: 0.04em;
+}
+
+.gallery-preview-hint span {
+  color: #38bdf8;
+  font-weight: 600;
+}

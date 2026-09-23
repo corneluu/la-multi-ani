@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { sendTelemetryEvent } from './telemetry'
+import { MEDIA_CONFIG } from './config'
 import './LoginPage.css'
+
+const photoCount = MEDIA_CONFIG.filter(i => i.mediaType === 'image').length
+const videoCount = MEDIA_CONFIG.filter(i => i.mediaType === 'video').length
 
 const TARGET_DATE_STR = import.meta.env.VITE_COUNTDOWN_TARGET || '2026-10-26T23:59:59'
 const MAIN_PASSWORD = import.meta.env.VITE_MAIN_PASSWORD || 'love'
@@ -196,6 +200,10 @@ export default function LoginPage({ onLoginSuccess }) {
           </div>
 
           {errorMsg && <p className="error-message">{errorMsg}</p>}
+
+          <div className="gallery-preview-hint">
+            📸 <span>{photoCount} fotografii</span>&nbsp;•&nbsp;🎬 <span>{videoCount} videoclipuri</span>
+          </div>
         </form>
       </main>
 
