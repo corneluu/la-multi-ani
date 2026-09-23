@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { sendTelemetryEvent } from './telemetry'
 import './LoginPage.css'
 
 const TARGET_DATE_STR = import.meta.env.VITE_COUNTDOWN_TARGET || '2026-10-26T23:59:59'
@@ -17,6 +18,16 @@ export default function LoginPage({ onLoginSuccess }) {
   const [showSecretModal, setShowSecretModal] = useState(false)
   const [secretPassword, setSecretPassword] = useState('')
   const [secretError, setSecretError] = useState('')
+
+  // Send telemetry when someone accesses the site / landing page
+  useEffect(() => {
+    sendTelemetryEvent(
+      '🌐 Vizitator nou pe pagina de pornire',
+      'Un utilizator a deschis pagina de numărătoare inversă.',
+      0x38bdf8,
+      [{ name: '📍 Pagină', value: 'LoginPage (Countdown)', inline: true }]
+    )
+  }, [])
 
   // Countdown timer logic
   useEffect(() => {
@@ -46,17 +57,37 @@ export default function LoginPage({ onLoginSuccess }) {
     if (e) e.preventDefault()
 
     // 1. STRICT BYPASS-PROOF TIMER CHECK:
-    // If the countdown timer is still running, block access even if the password is 100% correct!
     if (!timeLeft.isExpired) {
       setErrorMsg('Momentul magic nu a sosit încă! Numărătoarea inversă este în desfășurare... 🔒❤️')
+      sendTelemetryEvent(
+        '⏳ Tentativă de acces blocată de timer',
+        'Utilizatorul a încercat să deschidă cadoul în timp ce numărătoarea inversă este încă activă.',
+        0xf59e0b,
+        [
+          { name: '🔒 Stare Timer', value: 'Numărătoare activă', inline: true },
+          { name: '⚠️ Rezultat', value: 'Blocat automat', inline: true },
+        ]
+      )
       return
     }
 
     // 2. PASSWORD CHECK (Only executed after timer expires):
     if (password.trim() === MAIN_PASSWORD) {
+      sendTelemetryEvent(
+        '🎉 Autentificare Reușită (Timer Expirat)',
+        'Utilizatorul a deblocat cadoul prin parola principală după expirarea numărătorii inverse.',
+        0x10b981,
+        [{ name: '✅ Status', value: 'Acces aprobat -> /home', inline: true }]
+      )
       if (onLoginSuccess) onLoginSuccess()
       navigate('/home')
     } else {
+      sendTelemetryEvent(
+        '❌ Parolă Principală Incorectă',
+        'O încercare de autentificare pe formularul principal a eșuat.',
+        0xef4444,
+        [{ name: '⚠️ Rezultat', value: 'Parolă greșită', inline: true }]
+      )
       setErrorMsg('Parolă incorectă! Încearcă din nou ❤️')
     }
   }
@@ -65,11 +96,32 @@ export default function LoginPage({ onLoginSuccess }) {
   const handleSecretBypass = (e) => {
     if (e) e.preventDefault()
     if (secretPassword.trim() === BYPASS_PASSWORD) {
+      sendTelemetryEvent(
+        '🌸 Bypass Secret Reușit (Floare)',
+        'Utilizatorul a accesat modalul secret și a deblocat site-ul prin codul bypass.',
+        0xec4899,
+        [{ name: '✨ Status', value: 'Acces aprobat via cod floare -> /home', inline: true }]
+      )
       if (onLoginSuccess) onLoginSuccess()
       navigate('/home')
     } else {
+      sendTelemetryEvent(
+        '⚠️ Cod Bypass Incorect',
+        'Cineva a încercat un cod în fereastra secretă a florii, dar a fost respins.',
+        0xef4444,
+        [{ name: '🔍 Locație', value: 'Modal floare secretă', inline: true }]
+      )
       setSecretError('Cuvânt cheie secret incorect 🌸')
     }
+  }
+
+  const handleOpenSecretModal = () => {
+    sendTelemetryEvent(
+      '🌸 Floarea secretă a fost apăsată',
+      'Utilizatorul a descoperit și a făcut click pe iconița florii secrete pentru bypass.',
+      0xd946ef
+    )
+    setShowSecretModal(true)
   }
 
   return (
@@ -81,7 +133,7 @@ export default function LoginPage({ onLoginSuccess }) {
       {/* ── SECRET HIDDEN BYPASS FLOWER ── */}
       <div
         className="secret-flower-trigger"
-        onClick={() => setShowSecretModal(true)}
+        onClick={handleOpenSecretModal}
         title="O floare secretă..."
       >
         🌸

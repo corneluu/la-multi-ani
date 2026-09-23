@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Lightbox from './Lightbox'
 import { MEDIA_CONFIG } from './config'
+import { sendTelemetryEvent } from './telemetry'
 import './GalleryPage.css'
 
 const DEFAULT_LETTER = `Scumpa mea,
@@ -31,6 +32,41 @@ export default function GalleryPage() {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [isEditingLetter, setIsEditingLetter] = useState(false)
   const [tempLetter, setTempLetter] = useState(letterMessage)
+
+  // Log arrival in Gallery
+  useEffect(() => {
+    sendTelemetryEvent(
+      '🖼️ Galerie Deschisă',
+      'Utilizatorul explorează galeria orizontală cu fotografii și videoclipuri.',
+      0x38bdf8,
+      [
+        { name: '📍 Pagină', value: 'GalleryPage', inline: true },
+        { name: '🎞️ Total Elemente', value: `${mediaList.length} amintiri`, inline: true },
+      ]
+    )
+  }, [mediaList.length])
+
+  const handleOpenMedia = (item) => {
+    sendTelemetryEvent(
+      `👁️ Vizualizare ${item.mediaType === 'video' ? 'Videoclip' : 'Fotografie'}`,
+      `Utilizatorul a deschis în detaliu: "${item.name || item.id}"`,
+      0x0284c7,
+      [
+        { name: '📁 Tip', value: item.mediaType, inline: true },
+        { name: '🏷️ Nume', value: item.name || 'Fără titlu', inline: true },
+      ]
+    )
+    setSelectedItem(item)
+  }
+
+  const handleOpenGiftCard = () => {
+    sendTelemetryEvent(
+      '🎁 Cadoul Special (Scrisoarea) a fost deschis!',
+      'Utilizatorul a ajuns la capătul galeriei și a deschis scrisoarea de dragoste secretă.',
+      0xe11d48
+    )
+    setIsDrawerOpen(true)
+  }
 
   const handleSaveLetter = () => {
     setLetterMessage(tempLetter)
@@ -75,7 +111,7 @@ export default function GalleryPage() {
             <div
               key={item.id}
               className={`portrait-card ${item.mediaType === 'video' ? 'is-video' : ''}`}
-              onClick={() => setSelectedItem(item)}
+              onClick={() => handleOpenMedia(item)}
             >
               <div className="card-image-wrap">
                 {item.mediaType === 'video' && !item.thumb ? (
@@ -106,7 +142,7 @@ export default function GalleryPage() {
           {/* ── GIFT CARD (FAR AT THE END OF THE SCROLL) ── */}
           <div className="gift-card-spacer" />
           
-          <div className="gift-card-wrapper" onClick={() => setIsDrawerOpen(true)}>
+          <div className="gift-card-wrapper" onClick={handleOpenGiftCard}>
             <div className="gift-card">
               <div className="gift-card-inner">
                 <div className="gift-bow">🎁</div>

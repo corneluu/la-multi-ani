@@ -1,7 +1,8 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MEDIA_CONFIG } from './config'
 import { preloadMediaAssets } from './mediaPreloader'
+import { sendTelemetryEvent } from './telemetry'
 import LoadingScreen from './LoadingScreen'
 import './Home.css'
 
@@ -25,8 +26,26 @@ export default function Home() {
   const [currentMediaName, setCurrentMediaName] = useState('')
   const [isComplete, setIsComplete] = useState(false)
 
+  // Log page visit
+  useEffect(() => {
+    sendTelemetryEvent(
+      '🏡 Utilizatorul a ajuns pe pagina principală (Home)',
+      'Utilizatorul se află în ecranul cu buchetul de crini și mesajul "La mulți ani, iubita!".',
+      0x38bdf8,
+      [{ name: '📍 Pagină', value: 'Home (Buchet)', inline: true }]
+    )
+  }, [])
+
   const handleBouquetClick = async () => {
     if (isLoading) return
+
+    sendTelemetryEvent(
+      '💐 Buchetul de crini a fost apăsat',
+      'Utilizatorul a dat click pe buchet. A început ecranul de loading (4 secunde) și preîncărcarea galeriei.',
+      0xec4899,
+      [{ name: '🚀 Acțiune', value: 'Deschidere galerie', inline: true }]
+    )
+
     setIsLoading(true)
     setLoadingProgress(0)
     setCurrentMediaName('Se pregătesc fotografiile și videoclipurile... 🌸')
