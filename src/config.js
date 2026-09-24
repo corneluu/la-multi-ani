@@ -66,8 +66,20 @@ export const MEDIA_CONFIG = [
     src: `${BASE_URL}media/Snapchat-1457109396.jpg`,
     name: 'Surpriză De Necrezut 📸',
   },
+  {
+    id: 'photo-11',
+    mediaType: 'image',
+    src: `${BASE_URL}media/20260924_183447.jpg`,
+    name: 'Raze De Fericire 🌹',
+  },
+  {
+    id: 'photo-12',
+    mediaType: 'image',
+    src: `${BASE_URL}media/20260924_183511.jpg`,
+    name: 'Farmecul Tău Unic 💖',
+  },
 
-  // ── VIDEOCLIPURI (7) ──
+  // ── VIDEOCLIPURI (9) ──
   {
     id: 'video-1',
     mediaType: 'video',
@@ -109,5 +121,17 @@ export const MEDIA_CONFIG = [
     mediaType: 'video',
     src: `${BASE_URL}media/Snapchat-1104722070.mp4`,
     name: 'Clipul Nostru Special 🎬',
+  },
+  {
+    id: 'video-8',
+    mediaType: 'video',
+    src: `${BASE_URL}media/Snapchat-1162597940.mp4`,
+    name: 'Dulceață Și Iubire 🌸',
+  },
+  {
+    id: 'video-9',
+    mediaType: 'video',
+    src: `${BASE_URL}media/Snapchat-1573435981.mp4`,
+    name: 'Clipe Magice Cu Tine ✨',
   },
 ]
