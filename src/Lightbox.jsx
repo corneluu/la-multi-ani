@@ -1,9 +1,11 @@
 import { useEffect } from 'react'
 import './Lightbox.css'
 
-export default function Lightbox({ item, onClose }) {
+export default function Lightbox({ item, onClose, isSecretUser, formatUnlockDate }) {
   useEffect(() => {
-    const esc = e => { if (e.key === 'Escape') onClose() }
+    const esc = (e) => {
+      if (e.key === 'Escape') onClose()
+    }
     document.addEventListener('keydown', esc)
     return () => document.removeEventListener('keydown', esc)
   }, [onClose])
@@ -13,8 +15,21 @@ export default function Lightbox({ item, onClose }) {
 
   return (
     <div className="lb-back" onClick={onClose}>
-      <div className="lb-box" onClick={e => e.stopPropagation()}>
-        <button className="lb-x" onClick={onClose} aria-label="Închide">✕</button>
+      <div className="lb-box" onClick={(e) => e.stopPropagation()}>
+        <button className="lb-x" onClick={onClose} aria-label="Închide">
+          ✕
+        </button>
+
+        {/* Scheduled unlock banner for secret bypass preview */}
+        {item.isLocked && isSecretUser && (
+          <div className="lb-secret-banner">
+            <span className="lb-banner-icon">🔒</span>
+            <span className="lb-banner-text">
+              Previzualizare Secretă • Se va debloca public pe{' '}
+              <strong>{formatUnlockDate ? formatUnlockDate(item.unlockAt) : item.unlockAt}</strong>
+            </span>
+          </div>
+        )}
 
         <div className="lb-media-container">
           {isVideo ? (

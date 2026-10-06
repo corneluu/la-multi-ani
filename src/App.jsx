@@ -7,9 +7,20 @@ import GalleryPage from './GalleryPage'
 export default function App() {
   // Pure in-memory state: resets to false on EVERY browser refresh!
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isSecretUser, setIsSecretUser] = useState(false)
 
-  const handleLoginSuccess = () => {
+  const handleLoginSuccess = (isSecret = false) => {
     setIsAuthenticated(true)
+    setIsSecretUser(isSecret)
+    try {
+      if (isSecret) {
+        sessionStorage.setItem('lily_secret_mode', 'true')
+      } else {
+        sessionStorage.removeItem('lily_secret_mode')
+      }
+    } catch {
+      // Ignorăm erorile de storage
+    }
   }
 
   return (
@@ -25,15 +36,15 @@ export default function App() {
         <Route
           path="/home"
           element={
-            isAuthenticated ? <Home /> : <Navigate to="/" replace />
+            isAuthenticated ? <Home isSecretUser={isSecretUser} /> : <Navigate to="/" replace />
           }
         />
 
-        {/* Protected Gallery Page */}
+        {/* Protected Gallery Page with Group & Scheduled Unlock capabilities */}
         <Route
           path="/gallery"
           element={
-            isAuthenticated ? <GalleryPage /> : <Navigate to="/" replace />
+            isAuthenticated ? <GalleryPage isSecretUser={isSecretUser} /> : <Navigate to="/" replace />
           }
         />
 

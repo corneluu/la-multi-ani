@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Lightbox from './Lightbox'
-import { MEDIA_CONFIG } from './config'
+import { MEDIA_GROUPS } from './config'
 import { sendTelemetryEvent } from './telemetry'
 import './GalleryPage.css'
 
@@ -14,11 +14,40 @@ Fiecare poză și fiecare videoclip surprinde un moment în care ai fost pur și
 Cu toată dragostea mea,
 ❤️`
 
-export default function GalleryPage() {
+function formatUnlockDate(dateStr) {
+  if (!dateStr) return ''
+  try {
+    const d = new Date(dateStr)
+    if (isNaN(d.getTime())) return dateStr
+    const day = d.getDate().toString().padStart(2, '0')
+    const months = ['Ian', 'Feb', 'Mar', 'Apr', 'Mai', 'Iun', 'Iul', 'Aug', 'Sep', 'Oct', 'Noi', 'Dec']
+    const month = months[d.getMonth()]
+    const hours = d.getHours().toString().padStart(2, '0')
+    const minutes = d.getMinutes().toString().padStart(2, '0')
+    return `${day} ${month} ${d.getFullYear()}, ${hours}:${minutes}`
+  } catch {
+    return dateStr
+  }
+}
+
+export default function GalleryPage({ isSecretUser: propIsSecretUser }) {
   const navigate = useNavigate()
   const scrollRef = useRef(null)
 
-  const [mediaList] = useState(MEDIA_CONFIG)
+  // Determine if user has secret bypass permissions (via prop or sessionStorage)
+  const isSecretUser =
+    propIsSecretUser ??
+    (typeof window !== 'undefined' && sessionStorage.getItem('lily_secret_mode') === 'true')
+
+  // Real-time tick to dynamically unlock groups when the scheduled time arrives
+  const [currentTime, setCurrentTime] = useState(Date.now())
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(Date.now())
+    }, 2000)
+    return () => clearInterval(interval)
+  }, [])
 
   const [letterMessage, setLetterMessage] = useState(() => {
     try {
@@ -33,27 +62,69 @@ export default function GalleryPage() {
   const [isEditingLetter, setIsEditingLetter] = useState(false)
   const [tempLetter, setTempLetter] = useState(letterMessage)
 
+  // Compute visible groups and items based on unlock dates & secret bypass state
+  const visibleGroups = MEDIA_GROUPS.map((group) => {
+    const isGroupUnlocked = !group.unlockAt || currentTime >= new Date(group.unlockAt).getTime()
+
+    // If group is locked and user is NOT a secret user, hide the entire group
+    if (!isGroupUnlocked && !isSecretUser) {
+      return null
+    }
+
+    // Filter items inside the group
+    const visibleItems = group.items.filter((item) => {
+      if (isSecretUser) return true
+      const isItemUnlocked = !item.unlockAt || currentTime >= new Date(item.unlockAt).getTime()
+      return isItemUnlocked
+    })
+
+    if (visibleItems.length === 0 && !isSecretUser) {
+      return null
+    }
+
+    return {
+      ...group,
+      isGroupUnlocked,
+      items: visibleItems.map((item) => {
+        const itemUnlockDate = item.unlockAt || group.unlockAt
+        const isItemLocked = itemUnlockDate && currentTime < new Date(itemUnlockDate).getTime()
+        return {
+          ...item,
+          groupId: group.id,
+          groupTitle: group.title,
+          groupChapter: group.chapterNumber,
+          unlockAt: itemUnlockDate,
+          isLocked: isItemLocked,
+        }
+      }),
+    }
+  }).filter(Boolean)
+
+  const totalVisibleItems = visibleGroups.reduce((acc, g) => acc + g.items.length, 0)
+
   // Log arrival in Gallery
   useEffect(() => {
     sendTelemetryEvent(
-      '🖼️ Galerie Deschisă',
-      'Utilizatorul explorează galeria orizontală cu fotografii și videoclipuri.',
-      0x38bdf8,
+      isSecretUser ? '🌸 Galerie Deschisă (MOD SECRET MARIA)' : '🖼️ Galerie Deschisă',
+      `Utilizatorul explorează galeria pe grupuri (${totalVisibleItems} amintiri vizibile, ${visibleGroups.length} capitole).`,
+      isSecretUser ? 0xec4899 : 0x38bdf8,
       [
         { name: '📍 Pagină', value: 'GalleryPage', inline: true },
-        { name: '🎞️ Total Elemente', value: `${mediaList.length} amintiri`, inline: true },
+        { name: '🔑 Mod Acces', value: isSecretUser ? 'Secret Bypass (Maria)' : 'Standard (Timer Expirat)', inline: true },
+        { name: '🎞️ Total Elemente', value: `${totalVisibleItems} amintiri`, inline: true },
       ]
     )
-  }, [mediaList.length])
+  }, [totalVisibleItems, isSecretUser, visibleGroups.length])
 
   const handleOpenMedia = (item) => {
     sendTelemetryEvent(
-      `👁️ Vizualizare ${item.mediaType === 'video' ? 'Videoclip' : 'Fotografie'}`,
-      `Utilizatorul a deschis în detaliu: "${item.name || item.id}"`,
-      0x0284c7,
+      `👁️ Vizualizare ${item.mediaType === 'video' ? 'Videoclip' : 'Fotografie'}${item.isLocked ? ' (Programat 🔒)' : ''}`,
+      `Utilizatorul a deschis în detaliu: "${item.name || item.id}"${item.isLocked ? ` [Deblocare programată: ${formatUnlockDate(item.unlockAt)}]` : ''}`,
+      item.isLocked ? 0xd946ef : 0x0284c7,
       [
         { name: '📁 Tip', value: item.mediaType, inline: true },
         { name: '🏷️ Nume', value: item.name || 'Fără titlu', inline: true },
+        { name: '🔒 Programat', value: item.isLocked ? formatUnlockDate(item.unlockAt) : 'Deblocat', inline: true },
       ]
     )
     setSelectedItem(item)
@@ -98,6 +169,11 @@ export default function GalleryPage() {
             Aceasta este povestea cadourilor făcute pentru tine.
           </h2>
           <span className="ps-handwritten-tag">✨ dă scroll spre dreapta pentru a păși în poveste ✨</span>
+          {isSecretUser && (
+            <div className="secret-mode-indicator">
+              🌸 Mod Secret Activ (Maria) — Toate capitolele sunt vizibile
+            </div>
+          )}
         </div>
 
         <div className="topbar-right-spacer" />
@@ -106,42 +182,91 @@ export default function GalleryPage() {
       {/* ── HORIZONTAL SCROLLING CONTAINER ── */}
       <main className="horizontal-scroll-container" ref={scrollRef} onWheel={handleWheelScroll}>
         <div className="horizontal-grid">
-          {/* Media Cards */}
-          {mediaList.map((item) => (
-            <div
-              key={item.id}
-              className={`portrait-card ${item.mediaType === 'video' ? 'is-video' : ''}`}
-              onClick={() => handleOpenMedia(item)}
-            >
-              <div className="card-image-wrap">
-                {item.mediaType === 'video' && !item.thumb ? (
-                  <video
-                    src={`${item.src}#t=0.5`}
-                    preload="metadata"
-                    muted
-                    className="card-video-preview"
-                  />
-                ) : (
-                  <img
-                    src={item.thumb || item.src}
-                    alt=""
-                    loading="lazy"
-                  />
-                )}
+          {/* Render Groups and their media items */}
+          {visibleGroups.map((group) => (
+            <React.Fragment key={group.id}>
+              {/* ── CHAPTER INTRO CARD ── */}
+              <div className={`chapter-card ${!group.isGroupUnlocked ? 'is-chapter-locked' : ''}`}>
+                <div className="chapter-card-inner">
+                  <div className="chapter-badge">Capitolul {group.chapterNumber}</div>
+                  <h3 className="chapter-title">{group.title}</h3>
+                  {group.subtitle && <p className="chapter-subtitle">{group.subtitle}</p>}
 
-                {item.mediaType === 'video' && (
-                  <div className="video-overlay-badge">
-                    <span className="play-triangle">▶</span>
-                    <span className="video-quality-tag">1080p 60fps</span>
+                  <div className="chapter-items-count">
+                    <span>📸 {group.items.filter((i) => i.mediaType === 'image').length} poze</span>
+                    <span className="count-sep">•</span>
+                    <span>🎬 {group.items.filter((i) => i.mediaType === 'video').length} video</span>
                   </div>
-                )}
+
+                  {!group.isGroupUnlocked && isSecretUser && (
+                    <div className="chapter-scheduled-tag">
+                      <span className="sched-icon">🔒</span>
+                      <div className="sched-info">
+                        <span className="sched-label">Deblocare automată:</span>
+                        <span className="sched-date">{formatUnlockDate(group.unlockAt)}</span>
+                      </div>
+                      <span className="sched-secret-notice">✨ Previzualizare Secretă Maria ✨</span>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
+
+              {/* ── GROUP MEDIA ITEMS ── */}
+              {group.items.map((item) => (
+                <div
+                  key={item.id}
+                  className={`portrait-card ${item.mediaType === 'video' ? 'is-video' : ''} ${
+                    item.isLocked ? 'is-scheduled-locked' : ''
+                  }`}
+                  onClick={() => handleOpenMedia(item)}
+                >
+                  <div className="card-image-wrap">
+                    {item.mediaType === 'video' && !item.thumb ? (
+                      <video
+                        src={`${item.src}#t=0.5`}
+                        preload="metadata"
+                        muted
+                        className="card-video-preview"
+                      />
+                    ) : (
+                      <img
+                        src={item.thumb || item.src}
+                        alt=""
+                        loading="lazy"
+                      />
+                    )}
+
+                    {item.mediaType === 'video' && (
+                      <div className="video-overlay-badge">
+                        <span className="play-triangle">▶</span>
+                        <span className="video-quality-tag">1080p 60fps</span>
+                      </div>
+                    )}
+
+                    {/* Scheduled unlock tag for locked items (visible only to secret user) */}
+                    {item.isLocked && isSecretUser && (
+                      <div className="card-scheduled-overlay">
+                        <div className="card-unlock-badge">
+                          <span className="unlock-lock-icon">🔒</span>
+                          <div className="unlock-badge-text">
+                            <span className="unlock-badge-title">Deblocare:</span>
+                            <span className="unlock-badge-date">{formatUnlockDate(item.unlockAt)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+
+              {/* Decorative separator between groups */}
+              <div className="group-separator-line" />
+            </React.Fragment>
           ))}
 
           {/* ── GIFT CARD (FAR AT THE END OF THE SCROLL) ── */}
           <div className="gift-card-spacer" />
-          
+
           <div className="gift-card-wrapper" onClick={handleOpenGiftCard}>
             <div className="gift-card">
               <div className="gift-card-inner">
@@ -158,8 +283,10 @@ export default function GalleryPage() {
       {/* ── SIDE DRAWER FOR SECRET MESSAGE ── */}
       {isDrawerOpen && (
         <div className="drawer-overlay" onClick={() => setIsDrawerOpen(false)}>
-          <div className="side-drawer" onClick={e => e.stopPropagation()}>
-            <button className="drawer-close" onClick={() => setIsDrawerOpen(false)}>✕</button>
+          <div className="side-drawer" onClick={(e) => e.stopPropagation()}>
+            <button className="drawer-close" onClick={() => setIsDrawerOpen(false)}>
+              ✕
+            </button>
 
             <div className="drawer-header">
               <span className="letter-icon">💌</span>
@@ -171,7 +298,7 @@ export default function GalleryPage() {
                 <div className="edit-letter-wrap">
                   <textarea
                     value={tempLetter}
-                    onChange={e => setTempLetter(e.target.value)}
+                    onChange={(e) => setTempLetter(e.target.value)}
                     className="letter-textarea"
                     rows={10}
                   />
@@ -191,7 +318,13 @@ export default function GalleryPage() {
                       <p key={idx}>{line}</p>
                     ))}
                   </div>
-                  <button className="btn-edit-letter" onClick={() => { setTempLetter(letterMessage); setIsEditingLetter(true); }}>
+                  <button
+                    className="btn-edit-letter"
+                    onClick={() => {
+                      setTempLetter(letterMessage)
+                      setIsEditingLetter(true)
+                    }}
+                  >
                     ✏️ Editează Mesajul
                   </button>
                 </div>
@@ -209,6 +342,8 @@ export default function GalleryPage() {
       {selectedItem && (
         <Lightbox
           item={selectedItem}
+          isSecretUser={isSecretUser}
+          formatUnlockDate={formatUnlockDate}
           onClose={() => setSelectedItem(null)}
         />
       )}

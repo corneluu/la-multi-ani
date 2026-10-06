@@ -83,7 +83,7 @@ export default function LoginPage({ onLoginSuccess }) {
         0x10b981,
         [{ name: '✅ Status', value: 'Acces aprobat -> /home', inline: true }]
       )
-      if (onLoginSuccess) onLoginSuccess()
+      if (onLoginSuccess) onLoginSuccess(false)
       navigate('/home')
     } else {
       sendTelemetryEvent(
@@ -106,7 +106,7 @@ export default function LoginPage({ onLoginSuccess }) {
         0xec4899,
         [{ name: '✨ Status', value: 'Acces aprobat via cod floare -> /home', inline: true }]
       )
-      if (onLoginSuccess) onLoginSuccess()
+      if (onLoginSuccess) onLoginSuccess(true)
       navigate('/home')
     } else {
       sendTelemetryEvent(

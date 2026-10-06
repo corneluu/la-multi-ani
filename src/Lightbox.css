@@ -95,10 +95,46 @@
   transform: scale(1.08);
 }
 
+/* Secret preview floating banner */
+.lb-secret-banner {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.88);
+  border: 1px solid rgba(236, 72, 153, 0.45);
+  color: #f472b6;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 6px 18px;
+  border-radius: 50px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 20px rgba(236, 72, 153, 0.3);
+  z-index: 25;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.lb-secret-banner strong {
+  color: #fff;
+  font-weight: 700;
+}
+
 /* ══════════════════════════════════════════════════════
    📱 MOBILE RESPONSIVE STYLES (DO NOT TOUCH DESKTOP)
    ══════════════════════════════════════════════════════ */
 @media (max-width: 600px) {
+  .lb-secret-banner {
+    top: 8px;
+    font-size: 0.68rem;
+    padding: 4px 10px;
+    max-width: 75vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   .lb-back {
     padding: 8px;
   }
@@ -129,3 +165,4 @@
     font-size: 0.9rem;
   }
 }
+
