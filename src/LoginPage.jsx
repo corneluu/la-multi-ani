@@ -23,8 +23,13 @@ export default function LoginPage({ onLoginSuccess }) {
   const [secretPassword, setSecretPassword] = useState('')
   const [secretError, setSecretError] = useState('')
 
-  // Send telemetry when someone accesses the site / landing page
+  // Send telemetry when someone accesses the site / landing page & reset session secret flags
   useEffect(() => {
+    try {
+      sessionStorage.removeItem('lily_secret_mode')
+      sessionStorage.removeItem('lily_unlocked_chapters')
+    } catch {}
+
     sendTelemetryEvent(
       '🌐 Vizitator nou pe pagina de pornire',
       'Un utilizator a deschis pagina de numărătoare inversă.',
