@@ -14,40 +14,79 @@ Fiecare poză și fiecare videoclip surprinde un moment în care ai fost pur și
 Cu toată dragostea mea,
 ❤️`
 
-function formatUnlockDate(dateStr) {
-  if (!dateStr) return ''
-  try {
-    const d = new Date(dateStr)
-    if (isNaN(d.getTime())) return dateStr
-    const day = d.getDate().toString().padStart(2, '0')
-    const months = ['Ian', 'Feb', 'Mar', 'Apr', 'Mai', 'Iun', 'Iul', 'Aug', 'Sep', 'Oct', 'Noi', 'Dec']
-    const month = months[d.getMonth()]
-    const hours = d.getHours().toString().padStart(2, '0')
-    const minutes = d.getMinutes().toString().padStart(2, '0')
-    return `${day} ${month} ${d.getFullYear()}, ${hours}:${minutes}`
-  } catch {
-    return dateStr
-  }
+// Normalize text for flexible answer verification
+function normalizeAnswer(str) {
+  if (!str) return ''
+  return str
+    .toLowerCase()
+    .trim()
+    .replace(/[ăâ]/g, 'a')
+    .replace(/[î]/g, 'i')
+    .replace(/[ș]/g, 's')
+    .replace(/[ț]/g, 't')
+    .replace(/[^a-z0-9]/g, '') // strip all spaces, dots, slashes, dashes, commas
+}
+
+// Check Chapter 3: 3 iunie 2026
+function checkChapter3Answer(input) {
+  const norm = normalizeAnswer(input)
+  const validList = [
+    '3iunie2026', '03iunie2026',
+    '3iun2026', '03iun2026',
+    '3062026', '03062026',
+    '362026', '0362026',
+    '3june2026', '03june2026',
+    '3jun2026', '03jun2026',
+    '3iunie', '03iunie',
+    '3iun', '03iun',
+    '3june', '03june',
+  ]
+  if (validList.includes(norm)) return true
+  return /^0?3(iunie|iun|0?6|june|jun)(2026)?$/.test(norm)
+}
+
+// Check Chapter 5: 19 iunie 2005
+function checkChapter5Answer(input) {
+  const norm = normalizeAnswer(input)
+  const validList = [
+    '19iunie2005',
+    '19iun2005',
+    '19062005',
+    '1962005',
+    '19june2005',
+    '19jun2005',
+    '19iunie',
+    '19iun',
+    '19june',
+  ]
+  if (validList.includes(norm)) return true
+  return /^19(iunie|iun|0?6|june|jun)(2005)?$/.test(norm)
 }
 
 export default function GalleryPage({ isSecretUser: propIsSecretUser }) {
   const navigate = useNavigate()
   const scrollRef = useRef(null)
 
-  // Determine if user has secret bypass permissions (via prop or sessionStorage)
+  // Secret bypass mode (via prop or sessionStorage)
   const isSecretUser =
     propIsSecretUser ??
     (typeof window !== 'undefined' && sessionStorage.getItem('lily_secret_mode') === 'true')
 
-  // Real-time tick to dynamically unlock groups when the scheduled time arrives
-  const [currentTime, setCurrentTime] = useState(Date.now())
+  // Track which chapters are unlocked in this session
+  const [unlockedChapters, setUnlockedChapters] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem('lily_unlocked_chapters')
+      return saved ? JSON.parse(saved) : ['group-1', 'group-2', 'group-7']
+    } catch {
+      return ['group-1', 'group-2', 'group-7']
+    }
+  })
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentTime(Date.now())
-    }, 2000)
-    return () => clearInterval(interval)
-  }, [])
+  // State for interactive lock forms
+  const [inputAnswers, setInputAnswers] = useState({})
+  const [inputErrors, setInputErrors] = useState({})
+  const [sliderValues, setSliderValues] = useState({ 'group-4': 0 })
+  const [isSubmittingWebhook, setIsSubmittingWebhook] = useState(false)
 
   const [letterMessage, setLetterMessage] = useState(() => {
     try {
@@ -62,69 +101,145 @@ export default function GalleryPage({ isSecretUser: propIsSecretUser }) {
   const [isEditingLetter, setIsEditingLetter] = useState(false)
   const [tempLetter, setTempLetter] = useState(letterMessage)
 
-  // Compute visible groups and items based on unlock dates & secret bypass state
-  const visibleGroups = MEDIA_GROUPS.map((group) => {
-    const isGroupUnlocked = !group.unlockAt || currentTime >= new Date(group.unlockAt).getTime()
+  // Function to unlock a specific chapter
+  const unlockChapter = (groupId) => {
+    setUnlockedChapters((prev) => {
+      if (prev.includes(groupId)) return prev
+      const updated = [...prev, groupId]
+      try {
+        sessionStorage.setItem('lily_unlocked_chapters', JSON.stringify(updated))
+      } catch {}
+      return updated
+    })
+  }
 
-    // If group is locked and user is NOT a secret user, hide the entire group
-    if (!isGroupUnlocked && !isSecretUser) {
-      return null
+  // Handle password/date submit for questions
+  const handleQuestionSubmit = (group) => {
+    const rawVal = inputAnswers[group.id] || ''
+    if (!rawVal.trim()) {
+      setInputErrors((prev) => ({ ...prev, [group.id]: 'Te rog introdu un răspuns! ❤️' }))
+      return
     }
 
-    // Filter items inside the group
-    const visibleItems = group.items.filter((item) => {
-      if (isSecretUser) return true
-      const isItemUnlocked = !item.unlockAt || currentTime >= new Date(item.unlockAt).getTime()
-      return isItemUnlocked
+    let isCorrect = false
+    if (group.id === 'group-3') {
+      isCorrect = checkChapter3Answer(rawVal)
+    } else if (group.id === 'group-5') {
+      isCorrect = checkChapter5Answer(rawVal)
+    }
+
+    if (isCorrect) {
+      setInputErrors((prev) => ({ ...prev, [group.id]: '' }))
+      unlockChapter(group.id)
+      sendTelemetryEvent(
+        `🎉 ${group.title} a fost deblocat!`,
+        `Utilizatorul a răspuns corect: "${rawVal}"`,
+        0x10b981,
+        [{ name: '📖 Capitol', value: group.title, inline: true }]
+      )
+    } else {
+      setInputErrors((prev) => ({
+        ...prev,
+        [group.id]: 'Răspuns incorect! Gândește-te bine și încearcă din nou ❤️',
+      }))
+    }
+  }
+
+  // Handle Love Slider change
+  const handleSliderChange = (group, value) => {
+    const num = Number(value)
+    setSliderValues((prev) => ({ ...prev, [group.id]: num }))
+    if (num >= 100) {
+      unlockChapter(group.id)
+      sendTelemetryEvent(
+        `💖 ${group.title} a fost deblocat prin Drag Slider (100%)!`,
+        'Utilizatorul a dus bara de iubire la 100%! ❤️',
+        0xec4899,
+        [{ name: '📖 Capitol', value: group.title, inline: true }]
+      )
+    }
+  }
+
+  // Handle Open Question submit + Discord Webhook (Chapter 6)
+  const handleOpenQuestionSubmit = async (group) => {
+    const rawVal = inputAnswers[group.id] || ''
+    if (!rawVal.trim()) {
+      setInputErrors((prev) => ({ ...prev, [group.id]: 'Te rog scrie un răspuns! 💍' }))
+      return
+    }
+
+    setIsSubmittingWebhook(true)
+
+    // Format current date/time in Romania timezone
+    const now = new Date()
+    const roTime = now.toLocaleString('ro-RO', {
+      timeZone: 'Europe/Bucharest',
+      dateStyle: 'full',
+      timeStyle: 'medium',
     })
 
-    if (visibleItems.length === 0 && !isSecretUser) {
-      return null
+    // Send answer to dedicated Discord webhook
+    try {
+      if (group.webhookUrl) {
+        await fetch(group.webhookUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            embeds: [
+              {
+                title: '💍 RĂSPUNS NOU: Când crezi că te va cere Cornel de nevastă?',
+                description: `**Răspunsul Mariei:**\n>>> "${rawVal}"`,
+                color: 0xec4899,
+                fields: [
+                  { name: '⏰ Data & Ora', value: roTime, inline: true },
+                  { name: '📍 Locație', value: 'Capitolul 6 (Deblocat cu succes)', inline: true },
+                ],
+                footer: { text: 'La Mulți Ani, Iubita! 🌸' },
+                timestamp: new Date().toISOString(),
+              },
+            ],
+          }),
+        })
+      }
+    } catch (err) {
+      console.warn('Webhook notification failed', err)
     }
 
-    return {
-      ...group,
-      isGroupUnlocked,
-      items: visibleItems.map((item) => {
-        const itemUnlockDate = item.unlockAt || group.unlockAt
-        const isItemLocked = itemUnlockDate && currentTime < new Date(itemUnlockDate).getTime()
-        return {
-          ...item,
-          groupId: group.id,
-          groupTitle: group.title,
-          groupChapter: group.chapterNumber,
-          unlockAt: itemUnlockDate,
-          isLocked: isItemLocked,
-        }
-      }),
-    }
-  }).filter(Boolean)
+    setIsSubmittingWebhook(false)
+    unlockChapter(group.id)
 
-  const totalVisibleItems = visibleGroups.reduce((acc, g) => acc + g.items.length, 0)
+    sendTelemetryEvent(
+      `💍 ${group.title} a fost deblocat!`,
+      `Răspunsul la întrebarea despre căsătorie: "${rawVal}"`,
+      0xec4899,
+      [
+        { name: '💌 Răspuns', value: rawVal, inline: true },
+        { name: '⏰ Ora', value: roTime, inline: true },
+      ]
+    )
+  }
 
   // Log arrival in Gallery
   useEffect(() => {
     sendTelemetryEvent(
       isSecretUser ? '🌸 Galerie Deschisă (MOD SECRET MARIA)' : '🖼️ Galerie Deschisă',
-      `Utilizatorul explorează galeria pe grupuri (${totalVisibleItems} amintiri vizibile, ${visibleGroups.length} capitole).`,
+      'Utilizatorul explorează galeria interactivă pe capitole.',
       isSecretUser ? 0xec4899 : 0x38bdf8,
       [
         { name: '📍 Pagină', value: 'GalleryPage', inline: true },
-        { name: '🔑 Mod Acces', value: isSecretUser ? 'Secret Bypass (Maria)' : 'Standard (Timer Expirat)', inline: true },
-        { name: '🎞️ Total Elemente', value: `${totalVisibleItems} amintiri`, inline: true },
+        { name: '🔑 Mod Acces', value: isSecretUser ? 'Secret Bypass (Maria)' : 'Standard', inline: true },
       ]
     )
-  }, [totalVisibleItems, isSecretUser, visibleGroups.length])
+  }, [isSecretUser])
 
   const handleOpenMedia = (item) => {
     sendTelemetryEvent(
-      `👁️ Vizualizare ${item.mediaType === 'video' ? 'Videoclip' : 'Fotografie'}${item.isLocked ? ' (Programat 🔒)' : ''}`,
-      `Utilizatorul a deschis în detaliu: "${item.name || item.id}"${item.isLocked ? ` [Deblocare programată: ${formatUnlockDate(item.unlockAt)}]` : ''}`,
-      item.isLocked ? 0xd946ef : 0x0284c7,
+      `👁️ Vizualizare ${item.mediaType === 'video' ? 'Videoclip' : 'Fotografie'}`,
+      `Utilizatorul a deschis: "${item.name || item.id}"`,
+      0x0284c7,
       [
         { name: '📁 Tip', value: item.mediaType, inline: true },
         { name: '🏷️ Nume', value: item.name || 'Fără titlu', inline: true },
-        { name: '🔒 Programat', value: item.isLocked ? formatUnlockDate(item.unlockAt) : 'Deblocat', inline: true },
       ]
     )
     setSelectedItem(item)
@@ -133,7 +248,7 @@ export default function GalleryPage({ isSecretUser: propIsSecretUser }) {
   const handleOpenGiftCard = () => {
     sendTelemetryEvent(
       '🎁 Cadoul Special (Scrisoarea) a fost deschis!',
-      'Utilizatorul a ajuns la capătul galeriei și a deschis scrisoarea de dragoste secretă.',
+      'Utilizatorul a ajuns la capătul galeriei și a deschis scrisoarea de dragoste.',
       0xe11d48
     )
     setIsDrawerOpen(true)
@@ -158,7 +273,7 @@ export default function GalleryPage({ isSecretUser: propIsSecretUser }) {
 
   return (
     <div className="gallery-page">
-      {/* ── STATIC TOP HEADER (FIXED & SEAMLESS) ── */}
+      {/* ── STATIC TOP HEADER (SEAMLESS) ── */}
       <header className="gallery-topbar-seamless">
         <button className="back-btn" onClick={() => navigate('/home')}>
           ← Înapoi
@@ -171,7 +286,7 @@ export default function GalleryPage({ isSecretUser: propIsSecretUser }) {
           <span className="ps-handwritten-tag">✨ dă scroll spre dreapta pentru a păși în poveste ✨</span>
           {isSecretUser && (
             <div className="secret-mode-indicator">
-              🌸 Mod Secret Activ (Maria) — Toate capitolele sunt vizibile
+              🌸 Mod Secret Activ (Maria) — Toate capitolele sunt deblocate
             </div>
           )}
         </div>
@@ -182,89 +297,179 @@ export default function GalleryPage({ isSecretUser: propIsSecretUser }) {
       {/* ── HORIZONTAL SCROLLING CONTAINER ── */}
       <main className="horizontal-scroll-container" ref={scrollRef} onWheel={handleWheelScroll}>
         <div className="horizontal-grid">
-          {/* Render Groups and their media items */}
-          {visibleGroups.map((group) => (
-            <React.Fragment key={group.id}>
-              {/* ── CHAPTER INTRO CARD ── */}
-              <div className={`chapter-card ${!group.isGroupUnlocked ? 'is-chapter-locked' : ''}`}>
-                <div className="chapter-card-inner">
-                  <div className="chapter-badge">Capitolul {group.chapterNumber}</div>
-                  <h3 className="chapter-title">{group.title}</h3>
-                  {group.subtitle && <p className="chapter-subtitle">{group.subtitle}</p>}
+          {MEDIA_GROUPS.map((group) => {
+            const isUnlocked = isSecretUser || unlockedChapters.includes(group.id)
 
-                  <div className="chapter-items-count">
-                    <span>📸 {group.items.filter((i) => i.mediaType === 'image').length} poze</span>
-                    <span className="count-sep">•</span>
-                    <span>🎬 {group.items.filter((i) => i.mediaType === 'video').length} video</span>
-                  </div>
+            return (
+              <React.Fragment key={group.id}>
+                {/* ── CHAPTER INTRO CARD ── */}
+                <div className={`chapter-card ${!isUnlocked ? 'is-chapter-locked' : ''}`}>
+                  <div className="chapter-card-inner">
+                    <div className="chapter-badge">{group.title}</div>
 
-                  {!group.isGroupUnlocked && isSecretUser && (
-                    <div className="chapter-scheduled-tag">
-                      <span className="sched-icon">🔒</span>
-                      <div className="sched-info">
-                        <span className="sched-label">Deblocare automată:</span>
-                        <span className="sched-date">{formatUnlockDate(group.unlockAt)}</span>
+                    {/* VA URMA CARD */}
+                    {group.isVaUrma ? (
+                      <div className="va-urma-content">
+                        <span className="va-urma-icon">✨ 💌 ✨</span>
+                        <h3 className="va-urma-title">Va urma!:</h3>
+                        <p className="va-urma-desc">Noi amintiri frumoase se vor adăuga în curând... 🌸</p>
                       </div>
-                      <span className="sched-secret-notice">✨ Previzualizare Secretă Maria ✨</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* ── GROUP MEDIA ITEMS ── */}
-              {group.items.map((item) => (
-                <div
-                  key={item.id}
-                  className={`portrait-card ${item.mediaType === 'video' ? 'is-video' : ''} ${
-                    item.isLocked ? 'is-scheduled-locked' : ''
-                  }`}
-                  onClick={() => handleOpenMedia(item)}
-                >
-                  <div className="card-image-wrap">
-                    {item.mediaType === 'video' && !item.thumb ? (
-                      <video
-                        src={`${item.src}#t=0.5`}
-                        preload="metadata"
-                        muted
-                        className="card-video-preview"
-                      />
-                    ) : (
-                      <img
-                        src={item.thumb || item.src}
-                        alt=""
-                        loading="lazy"
-                      />
-                    )}
-
-                    {item.mediaType === 'video' && (
-                      <div className="video-overlay-badge">
-                        <span className="play-triangle">▶</span>
-                        <span className="video-quality-tag">1080p 60fps</span>
-                      </div>
-                    )}
-
-                    {/* Scheduled unlock tag for locked items (visible only to secret user) */}
-                    {item.isLocked && isSecretUser && (
-                      <div className="card-scheduled-overlay">
-                        <div className="card-unlock-badge">
-                          <span className="unlock-lock-icon">🔒</span>
-                          <div className="unlock-badge-text">
-                            <span className="unlock-badge-title">Deblocare:</span>
-                            <span className="unlock-badge-date">{formatUnlockDate(item.unlockAt)}</span>
-                          </div>
+                    ) : isUnlocked ? (
+                      /* UNLOCKED CHAPTER SUMMARY */
+                      <div className="unlocked-summary">
+                        <span className="unlocked-icon">💖</span>
+                        <div className="chapter-items-count">
+                          <span>📸 {group.items.filter((i) => i.mediaType === 'image').length} poze</span>
+                          <span className="count-sep">•</span>
+                          <span>🎬 {group.items.filter((i) => i.mediaType === 'video').length} video</span>
                         </div>
+                        <span className="unlocked-tag-badge">✨ Deblocat cu Dragoste ✨</span>
+                      </div>
+                    ) : (
+                      /* LOCKED CHAPTER INTERACTIVE CHALLENGES */
+                      <div className="locked-challenge-wrapper">
+                        {/* TYPE 1: QUESTION (Chapter 3 & Chapter 5) */}
+                        {group.unlockType === 'question' && (
+                          <div className="interactive-question-box">
+                            <span className="lock-pulse-icon">🔒</span>
+                            <p className="challenge-question-text">{group.question}</p>
+                            <div className="challenge-input-row">
+                              <input
+                                type="text"
+                                placeholder={group.placeholder || 'Răspunsul tău...'}
+                                value={inputAnswers[group.id] || ''}
+                                onChange={(e) => {
+                                  setInputAnswers({ ...inputAnswers, [group.id]: e.target.value })
+                                  setInputErrors({ ...inputErrors, [group.id]: '' })
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') handleQuestionSubmit(group)
+                                }}
+                                className="challenge-input"
+                              />
+                              <button
+                                type="button"
+                                className="challenge-submit-btn"
+                                onClick={() => handleQuestionSubmit(group)}
+                              >
+                                Deblochează 💖
+                              </button>
+                            </div>
+                            {inputErrors[group.id] && (
+                              <p className="challenge-error-text">{inputErrors[group.id]}</p>
+                            )}
+                          </div>
+                        )}
+
+                        {/* TYPE 2: LOVE VOLUME SLIDER (Chapter 4) */}
+                        {group.unlockType === 'slider' && (
+                          <div className="interactive-slider-box">
+                            <span className="lock-pulse-icon">💖</span>
+                            <p className="challenge-question-text">{group.question}</p>
+
+                            <div className="love-slider-container">
+                              <div className="slider-percentage-badge">
+                                {sliderValues[group.id] || 0}% ❤️
+                              </div>
+                              <div className="love-slider-track-wrap">
+                                <input
+                                  type="range"
+                                  min="0"
+                                  max="100"
+                                  value={sliderValues[group.id] || 0}
+                                  onChange={(e) => handleSliderChange(group, e.target.value)}
+                                  className="love-volume-slider"
+                                  style={{
+                                    background: `linear-gradient(90deg, #ff1493 0%, #ff4b72 ${sliderValues[group.id] || 0}%, rgba(255,255,255,0.3) ${sliderValues[group.id] || 0}%)`,
+                                  }}
+                                />
+                              </div>
+                              <p className="slider-instruction">
+                                Trage inimioara la 100% spre dreapta pentru a debloca! ✨
+                              </p>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* TYPE 3: OPEN QUESTION + DISCORD WEBHOOK (Chapter 6) */}
+                        {group.unlockType === 'open_question' && (
+                          <div className="interactive-open-question-box">
+                            <span className="lock-pulse-icon">💍</span>
+                            <p className="challenge-question-text">{group.question}</p>
+                            <div className="challenge-input-row">
+                              <input
+                                type="text"
+                                placeholder={group.placeholder || 'Scrie răspunsul tău aici...'}
+                                value={inputAnswers[group.id] || ''}
+                                onChange={(e) => {
+                                  setInputAnswers({ ...inputAnswers, [group.id]: e.target.value })
+                                  setInputErrors({ ...inputErrors, [group.id]: '' })
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') handleOpenQuestionSubmit(group)
+                                }}
+                                className="challenge-input"
+                              />
+                              <button
+                                type="button"
+                                className="challenge-submit-btn"
+                                disabled={isSubmittingWebhook}
+                                onClick={() => handleOpenQuestionSubmit(group)}
+                              >
+                                {isSubmittingWebhook ? 'Se trimite...' : 'Trimite Răspunsul 💍'}
+                              </button>
+                            </div>
+                            {inputErrors[group.id] && (
+                              <p className="challenge-error-text">{inputErrors[group.id]}</p>
+                            )}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
                 </div>
-              ))}
 
-              {/* Decorative separator between groups */}
-              <div className="group-separator-line" />
-            </React.Fragment>
-          ))}
+                {/* ── CHAPTER MEDIA ITEMS (Shown only if chapter is unlocked) ── */}
+                {isUnlocked &&
+                  group.items.map((item) => (
+                    <div
+                      key={item.id}
+                      className={`portrait-card ${item.mediaType === 'video' ? 'is-video' : ''}`}
+                      onClick={() => handleOpenMedia(item)}
+                    >
+                      <div className="card-image-wrap">
+                        {item.mediaType === 'video' && !item.thumb ? (
+                          <video
+                            src={`${item.src}#t=0.5`}
+                            preload="metadata"
+                            muted
+                            className="card-video-preview"
+                          />
+                        ) : (
+                          <img
+                            src={item.thumb || item.src}
+                            alt=""
+                            loading="lazy"
+                          />
+                        )}
 
-          {/* ── GIFT CARD (FAR AT THE END OF THE SCROLL) ── */}
+                        {item.mediaType === 'video' && (
+                          <div className="video-overlay-badge">
+                            <span className="play-triangle">▶</span>
+                            <span className="video-quality-tag">1080p 60fps</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+
+                {/* Decorative separator between chapters */}
+                <div className="group-separator-line" />
+              </React.Fragment>
+            )
+          })}
+
+          {/* ── GIFT CARD (AT THE END OF THE SCROLL) ── */}
           <div className="gift-card-spacer" />
 
           <div className="gift-card-wrapper" onClick={handleOpenGiftCard}>
@@ -343,7 +548,6 @@ export default function GalleryPage({ isSecretUser: propIsSecretUser }) {
         <Lightbox
           item={selectedItem}
           isSecretUser={isSecretUser}
-          formatUnlockDate={formatUnlockDate}
           onClose={() => setSelectedItem(null)}
         />
       )}
