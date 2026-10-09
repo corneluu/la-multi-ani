@@ -43,7 +43,7 @@ export const MEDIA_GROUPS = [
     title: 'Capitolul 3',
     unlockType: 'question',
     question: 'În ce dată te-am întrebat dacă vrei să fii iubita mea?',
-    placeholder: 'Ex: 3 iunie 2026 sau 3.06.2026',
+    placeholder: 'Ex: zi.luna.an',
     isVaUrma: false,
     items: [
       { id: 'v-4-1', mediaType: 'video', src: `${BASE_URL}media/4.1.mp4`, name: 'Momentul Nostru 🎬' },
@@ -75,7 +75,7 @@ export const MEDIA_GROUPS = [
     title: 'Capitolul 5',
     unlockType: 'question',
     question: 'Care e data mea de naștere? (zi lună an)',
-    placeholder: 'Ex: 19 iunie 2005 sau 19.06.2005',
+    placeholder: 'Ex: zi.luna.an',
     isVaUrma: false,
     items: [
       { id: 'p-5-1', mediaType: 'image', src: `${BASE_URL}media/5.1.jpg`, name: 'Foto 5.1 🌸' },

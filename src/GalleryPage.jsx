@@ -5,14 +5,12 @@ import { MEDIA_GROUPS } from './config'
 import { sendTelemetryEvent } from './telemetry'
 import './GalleryPage.css'
 
-const DEFAULT_LETTER = `Scumpa mea,
+const DEFAULT_LETTER = `Draga Andreea,
 
-Această galerie este creată special pentru tine, cu toate amintirile noastre cele mai frumoase. 
+Aceste cadouri le am facut cu toata dragostea pentru tine. Sper ca iti plac si sper ca iti aduc aminte cat de iubita esti de mine. Nu iti pot spune si nici nu iti pot arata vreodata cat de mult te iubesc. Tot ce pot face e sa incerc sa o fac. Si sper ca prin aceste mici gesturi, am reusit catusi de putin sa iti arat cat de mult te iubesc, cat de mult te pretuiesc. sper sa te bucuri de fiecare cadou in parte pentru ca in fiecare cadou, oricat ar fi el de mic, eu am pus suflet. am pus o parte din mine. 
+La multi ani iubita.
 
-Fiecare poză și fiecare videoclip surprinde un moment în care ai fost pur și simplu minunată. Ești lumina zilelor mele și cel mai frumos cadou din viața mea!
-
-Cu toată dragostea mea,
-❤️`
+Cu drag, al tau Cornel <3`
 
 // Normalize text for flexible answer verification
 function normalizeAnswer(str) {
@@ -93,7 +91,11 @@ export default function GalleryPage({ isSecretUser: propIsSecretUser }) {
 
   const [letterMessage, setLetterMessage] = useState(() => {
     try {
-      return localStorage.getItem('lily_gallery_letter') || DEFAULT_LETTER
+      const stored = localStorage.getItem('lily_gallery_letter')
+      if (stored && !stored.includes('Scumpa mea,')) {
+        return stored
+      }
+      return DEFAULT_LETTER
     } catch {
       return DEFAULT_LETTER
     }
