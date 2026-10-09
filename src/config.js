@@ -169,7 +169,7 @@ export const MEDIA_GROUPS = [
     ],
   },
 
-  // ── CAPITOLUL 4: SURPRIZA FINALĂ ȘI MARELE CADOU ──
+  // ── CAPITOLUL 4: MARELE CADOU ──
   {
     id: 'group-4',
     chapterNumber: 4,
@@ -188,6 +188,77 @@ export const MEDIA_GROUPS = [
         mediaType: 'video',
         src: `${BASE_URL}media/4.1.mp4`,
         name: 'Clipul Nostru Special 🎬',
+      },
+    ],
+  },
+
+  // ── CAPITOLUL 5: CLIPE DE VIS & IUBIRE ETERNĂ ──
+  {
+    id: 'group-5',
+    chapterNumber: 5,
+    title: 'Clipe De Vis & Iubire Eternă 💖',
+    subtitle: 'Cele mai noi și prețioase amintiri împreună',
+    unlockAt: '2026-10-26T23:59:59', // Modifică data/ora de deblocare aici
+    items: [
+      {
+        id: 'photo-13',
+        mediaType: 'image',
+        src: `${BASE_URL}media/5.1.jpg`,
+        name: 'Zâmbetul Care Mă Încântă 🌸',
+      },
+      {
+        id: 'photo-14',
+        mediaType: 'image',
+        src: `${BASE_URL}media/5.2.jpg`,
+        name: 'Frumusețe Fără Seamăn ✨',
+      },
+      {
+        id: 'photo-15',
+        mediaType: 'image',
+        src: `${BASE_URL}media/5.3.webp`,
+        name: 'Priviri Plinede Magie 💖',
+      },
+      {
+        id: 'photo-16',
+        mediaType: 'image',
+        src: `${BASE_URL}media/5.4.webp`,
+        name: 'Strălucirea Ta Unică 🌟',
+      },
+      {
+        id: 'photo-17',
+        mediaType: 'image',
+        src: `${BASE_URL}media/5.5.jpg`,
+        name: 'O Rază De Fericire ☀️',
+      },
+      {
+        id: 'photo-18',
+        mediaType: 'image',
+        src: `${BASE_URL}media/5.6.jpg`,
+        name: 'Inima Mea E La Tine ❤️',
+      },
+      {
+        id: 'video-11',
+        mediaType: 'video',
+        src: `${BASE_URL}media/5.7.mp4`,
+        name: 'Râsete și Bucurie Pură 💕',
+      },
+      {
+        id: 'video-12',
+        mediaType: 'video',
+        src: `${BASE_URL}media/5.8.mp4`,
+        name: 'Momentul Nostru Magic 🎥',
+      },
+      {
+        id: 'video-13',
+        mediaType: 'video',
+        src: `${BASE_URL}media/5.9.mp4`,
+        name: 'O Poveste De Neuitat 🌷',
+      },
+      {
+        id: 'video-14',
+        mediaType: 'video',
+        src: `${BASE_URL}media/5.10.mp4`,
+        name: 'Pentru Totdeauna Împreună 💫',
       },
     ],
   },
