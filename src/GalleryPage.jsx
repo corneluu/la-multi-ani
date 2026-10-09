@@ -72,6 +72,9 @@ export default function GalleryPage({ isSecretUser: propIsSecretUser }) {
     propIsSecretUser ??
     (typeof window !== 'undefined' && sessionStorage.getItem('lily_secret_mode') === 'true')
 
+  // Debug state: Toggle normal user simulation mode to test lock challenges
+  const [isSimulateNormalUser, setIsSimulateNormalUser] = useState(false)
+
   // Track which chapters are unlocked in this session
   const [unlockedChapters, setUnlockedChapters] = useState(() => {
     try {
@@ -111,6 +114,18 @@ export default function GalleryPage({ isSecretUser: propIsSecretUser }) {
       } catch {}
       return updated
     })
+  }
+
+  // Debug function to reset all test locks
+  const handleResetTest = () => {
+    const baseUnlocked = ['group-1', 'group-2', 'group-7']
+    setUnlockedChapters(baseUnlocked)
+    try {
+      sessionStorage.setItem('lily_unlocked_chapters', JSON.stringify(baseUnlocked))
+    } catch {}
+    setInputAnswers({})
+    setInputErrors({})
+    setSliderValues({ 'group-4': 0 })
   }
 
   // Handle password/date submit for questions
@@ -285,20 +300,52 @@ export default function GalleryPage({ isSecretUser: propIsSecretUser }) {
           </h2>
           <span className="ps-handwritten-tag">✨ dă scroll spre dreapta pentru a păși în poveste ✨</span>
           {isSecretUser && (
-            <div className="secret-mode-indicator">
-              🌸 Mod Secret Activ (Maria) — Toate capitolele sunt deblocate
+            <div className={`secret-mode-indicator ${isSimulateNormalUser ? 'sim-active' : ''}`}>
+              {isSimulateNormalUser
+                ? '🧪 Mod Debug: Simulare Vizitator Normal (Încuietori Active)'
+                : '🌸 Mod Secret Activ (Maria) — Toate capitolele sunt deblocate'}
             </div>
           )}
         </div>
 
-        <div className="topbar-right-spacer" />
+        {/* Topbar Right Action: Debug / Test Button */}
+        <div className="topbar-right-actions">
+          {isSecretUser && (
+            <div className="debug-controls-pill">
+              <button
+                type="button"
+                className={`debug-btn ${isSimulateNormalUser ? 'is-simulating' : ''}`}
+                onClick={() => setIsSimulateNormalUser(!isSimulateNormalUser)}
+                title={
+                  isSimulateNormalUser
+                    ? 'Revino la modul cu toate deblocate'
+                    : 'Transformă galeria în cea pe care o vede un utilizator normal'
+                }
+              >
+                {isSimulateNormalUser ? '👑 Mod Admin' : '🧪 Buton Debug'}
+              </button>
+              {isSimulateNormalUser && (
+                <button
+                  type="button"
+                  className="debug-reset-btn"
+                  onClick={handleResetTest}
+                  title="Resetează încuietorile pentru a le testa din nou"
+                >
+                  🔄 Reset
+                </button>
+              )}
+            </div>
+          )}
+        </div>
       </header>
 
       {/* ── HORIZONTAL SCROLLING CONTAINER ── */}
       <main className="horizontal-scroll-container" ref={scrollRef} onWheel={handleWheelScroll}>
         <div className="horizontal-grid">
           {MEDIA_GROUPS.map((group) => {
-            const isUnlocked = isSecretUser || unlockedChapters.includes(group.id)
+            // If simulating normal user, ignore admin unlock; otherwise respect admin status
+            const isUnlocked =
+              (isSecretUser && !isSimulateNormalUser) || unlockedChapters.includes(group.id)
 
             return (
               <React.Fragment key={group.id}>
@@ -380,7 +427,9 @@ export default function GalleryPage({ isSecretUser: propIsSecretUser }) {
                                   onChange={(e) => handleSliderChange(group, e.target.value)}
                                   className="love-volume-slider"
                                   style={{
-                                    background: `linear-gradient(90deg, #ff1493 0%, #ff4b72 ${sliderValues[group.id] || 0}%, rgba(255,255,255,0.3) ${sliderValues[group.id] || 0}%)`,
+                                    background: `linear-gradient(90deg, #ff1493 0%, #ff4b72 ${
+                                      sliderValues[group.id] || 0
+                                    }%, rgba(255,255,255,0.3) ${sliderValues[group.id] || 0}%)`,
                                   }}
                                 />
                               </div>
