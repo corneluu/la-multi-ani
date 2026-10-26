@@ -61,30 +61,15 @@ export default function LoginPage({ onLoginSuccess }) {
     return () => clearInterval(timer)
   }, [])
 
-  // STRICT MAIN LOGIN HANDLER: BLOCKS ACCESS IF TIMER IS ACTIVE
+  // MAIN LOGIN HANDLER
   const handleMainLogin = (e) => {
     if (e) e.preventDefault()
 
-    // 1. STRICT BYPASS-PROOF TIMER CHECK:
-    if (!timeLeft.isExpired) {
-      setErrorMsg('Momentul magic nu a sosit încă! Numărătoarea inversă este în desfășurare... 🔒❤️')
-      sendTelemetryEvent(
-        '⏳ Tentativă de acces blocată de timer',
-        'Utilizatorul a încercat să deschidă cadoul în timp ce numărătoarea inversă este încă activă.',
-        0xf59e0b,
-        [
-          { name: '🔒 Stare Timer', value: 'Numărătoare activă', inline: true },
-          { name: '⚠️ Rezultat', value: 'Blocat automat', inline: true },
-        ]
-      )
-      return
-    }
-
-    // 2. PASSWORD CHECK (Only executed after timer expires):
+    // PASSWORD CHECK:
     if (password.trim() === MAIN_PASSWORD) {
       sendTelemetryEvent(
-        '🎉 Autentificare Reușită (Timer Expirat)',
-        'Utilizatorul a deblocat cadoul prin parola principală după expirarea numărătorii inverse.',
+        '🎉 Autentificare Reușită',
+        'Utilizatorul a deblocat cadoul prin parola principală.',
         0x10b981,
         [{ name: '✅ Status', value: 'Acces aprobat -> /home', inline: true }]
       )
@@ -154,7 +139,9 @@ export default function LoginPage({ onLoginSuccess }) {
           <span className="sparkle-heart">✨ ❤️ ✨</span>
           <h1>O Surpriză Specială Pentru Tine</h1>
           <p className="countdown-subtitle">
-            Numărătoarea inversă până la momentul tău magic:
+            {timeLeft.isExpired
+              ? 'Momentul tău magic a sosit! ✨'
+              : 'Numărătoarea inversă până la momentul tău magic:'}
           </p>
         </div>
 
@@ -186,7 +173,7 @@ export default function LoginPage({ onLoginSuccess }) {
           <div className="input-group">
             <input
               type="password"
-              placeholder={timeLeft.isExpired ? 'Introdu parola magică...' : 'Blocat până la expirarea timer-ului 🔒'}
+              placeholder="Introdu parola magică..."
               value={password}
               onChange={(e) => { setPassword(e.target.value); setErrorMsg(''); }}
               onKeyDown={(e) => {
@@ -198,9 +185,9 @@ export default function LoginPage({ onLoginSuccess }) {
             />
             <button
               type="submit"
-              className={`login-btn ${!timeLeft.isExpired ? 'btn-locked' : ''}`}
+              className="login-btn"
             >
-              {timeLeft.isExpired ? 'Deschide Cadoul 🔑' : 'Cadou Blocat 🔒'}
+              Deschide Cadoul 🔑
             </button>
           </div>
 
